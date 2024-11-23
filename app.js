@@ -4,6 +4,8 @@ import dotenv from "dotenv";
 import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
+import path, { dirname } from "path";
+import { fileURLToPath } from "url";
 
 import config from "./src/config/config.js";
 import pool from "./src/config/db.js";
@@ -32,6 +34,9 @@ app.use(express.urlencoded({ extended: true }));
 if (config.environment !== "test") {
   app.use(morgan("dev")); // Log requests only in non-test environment
 }
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Serve static files with proper CORS and caching headers
 app.use(
