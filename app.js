@@ -55,6 +55,10 @@ app.use(
   })
 );
 
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
 app.get("/script.js", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "script.js"));
 });

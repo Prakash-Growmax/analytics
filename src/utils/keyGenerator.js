@@ -17,3 +17,8 @@ export const generateApiKey = () => {
     hashedKey, // Stored in database
   };
 };
+
+export const getHasedKey = (apiKey) => {
+  // Generate hash of the provided API key
+  return crypto.createHash("sha256").update(apiKey).digest("hex");
+};

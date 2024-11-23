@@ -19,8 +19,9 @@ export const validateApiKey = async (req, res, next) => {
     }
 
     req.tenant_id = result.rows[0].tenant_id;
-    console.log("🚀 ~ validateApiKey ~ req.tenant_id :", req.tenant_id);
     req.permissions = result.rows[0].permissions;
+    req.apiKeyresult = result.rows[0];
+    req.isValidApikey = true;
     next();
   } catch (error) {
     console.error("Auth error:", error);

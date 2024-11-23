@@ -1,5 +1,5 @@
 import pool from "../config/db.js";
-import { generateApiKey } from "../utils/keyGenerator.js"; // Adjust the path accordingly
+import { generateApiKey, getHasedKey } from "../utils/keyGenerator.js"; // Adjust the path accordingly
 import { validateTenantInput } from "../validators/tenantValidator.js"; // Use import instead of require
 
 class TenantModel {
@@ -47,6 +47,7 @@ class TenantModel {
       return {
         tenant: tenantResult.rows[0],
         apiKey: rawKey, // Return raw key - it will be shown only once
+        hashedKey: hashedKey,
       };
     } catch (error) {
       await client.query("ROLLBACK");
@@ -85,6 +86,71 @@ class TenantModel {
         apiKey: rawKey, // Return raw key - will be shown only once
         details: result.rows[0],
       };
+    } finally {
+      client.release();
+    }
+  }
+
+  static async verifyApiKey(tenantId, apiKey) {
+    const client = await pool.connect();
+
+    try {
+      // Generate hash of the provided API key
+      const hash = getHasedKey(apiKey);
+
+      // Query to find tenant and matching API key
+      const result = await client.query(
+        `SELECT 
+            t.id as tenant_id,
+            t.name as tenant_name,
+            t.settings as tenant_settings,
+            ak.key_name,
+            ak.permissions,
+            ak.created_at,
+            ak.expires_at,
+            ak.rate_limit,
+            ak.last_used_at,
+            ak.allowed_ips
+        FROM tenants t
+        INNER JOIN api_keys ak ON ak.tenant_id = t.id
+        WHERE t.id = $1 
+        AND ak.api_key = $2 
+        AND ak.status = 'active'
+        AND (ak.expires_at IS NULL OR ak.expires_at > CURRENT_TIMESTAMP)`,
+        [tenantId, hash]
+      );
+      if (result.rows.length === 0) {
+        return { isValid: false };
+      }
+
+      const row = result.rows[0];
+
+      // Update last_used_at
+      await client.query(
+        `UPDATE api_keys 
+         SET last_used_at = CURRENT_TIMESTAMP 
+         WHERE tenant_id = $1 AND api_key = $2`,
+        [tenantId, hash]
+      );
+      return {
+        isValid: true,
+        tenant: {
+          id: row.tenant_id,
+          name: row.tenant_name,
+          settings: row.tenant_settings,
+        },
+        keyDetails: {
+          name: row.key_name,
+          permissions: row.permissions,
+          createdAt: row.created_at,
+          expiresAt: row.expires_at,
+          rateLimit: row.rate_limit,
+          lastUsedAt: row.last_used_at,
+          allowedIps: row.allowed_ips,
+        },
+      };
+    } catch (error) {
+      throw new Error(`API key verification failed: ${error.message}`);
     } finally {
       client.release();
     }
