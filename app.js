@@ -33,6 +33,27 @@ if (config.environment !== "test") {
   app.use(morgan("dev")); // Log requests only in non-test environment
 }
 
+// Serve static files with proper CORS and caching headers
+app.use(
+  "/static",
+  express.static(path.join(__dirname, "public"), {
+    setHeaders: (res, path) => {
+      // Enable CORS
+      res.setHeader("Access-Control-Allow-Origin", "*");
+
+      // Set caching headers
+      if (path.endsWith(".js")) {
+        res.setHeader("Cache-Control", "public, max-age=86400"); // 24 hours
+        res.setHeader("Content-Type", "application/javascript");
+      }
+    },
+  })
+);
+
+app.get("/script.js", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "script.js"));
+});
+
 // Health check endpoint
 app.get("/health", async (req, res) => {
   const startTime = Date.now();
