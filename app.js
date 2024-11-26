@@ -60,7 +60,9 @@ app.get("/", (req, res) => {
 });
 
 app.get("/script.js", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "script.js"));
+  res.setHeader("Cache-Control", "public, max-age=3600"); // Cache for 1 hour
+  res.setHeader("Access-Control-Allow-Origin", "*"); // Allow any domain to access
+  res.sendFile(path.join(__dirname, "public/script.min.js"));
 });
 
 // Health check endpoint

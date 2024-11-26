@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "jest",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "build": "webpack --mode production",
+    "postbuild": "mkdir -p public && cp dist/visitor-tracker.min.js public/script.js"
   },
   "lint-staged": {
     "*.js": [
