@@ -24,7 +24,12 @@ const config = {
       ? process.env.ALLOWED_ORIGINS.split(",")
       : "*",
     methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "X-API-Key", "X-Admin-Token"],
+    allowedHeaders: [
+      "Content-Type",
+      "X-API-Key",
+      "X-Admin-Token",
+      "Authorization",
+    ],
   },
 };
 
